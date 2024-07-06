@@ -29,6 +29,7 @@ I know the wall of text "Notes" below might be scary, but **please read** them t
 		+ No support for temporary breakpoints requires you to disable previous breakpoints.
 		+ You need disable all breakpoints before starting the debug if you use `debug_init_break` (actually inside `debug_init_cmds`).
 	+ Or use GDB manually - which is harder, requires knowledge and manual operation but feels more solid.
+		+ `Ctrl+C` works nicely as interrupt, of course if `GDBSTUB_CTRLC_BREAK=1` (default).
 + Some stuff just doesn't work at all:
 	+ `call`ing functions from GDB, incl. in expressions.
 + There is limit of single watchpoint and single breakpoint! Tip: use temporary breakpoints, example: `tbreak loop`. 
