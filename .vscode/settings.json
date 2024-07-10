@@ -5,6 +5,7 @@
 		"esptoolpy",
 		"gdbstub",
 		"ifdef",
+		"SIGTRAP",
 		"tbreak",
 		"USERPROFILE",
 		"watchpoint",

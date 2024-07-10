@@ -15,6 +15,7 @@ I know the wall of text "Notes" below might be scary, but **please read** them t
 	+ Unlike `monitor_port`, the `debug_port` must be in full path even on Windows (i.e. `\\.\COM13` instead just `COM13`).
 	+ If you don't want to set the port in the file, you will need to manually type `target remote \\\\.\\COM13` into the Debug Console tab in VS Code.
 	+ You can use `pio device list` to list the devices.
+	+ If you get upload before every debug session - even if you didn't change the code - you might want to set `debug_load_mode = manual`. In this project the `modified` option works okay, but in my other, more complex project, I can't get it to working (no files compiled, but still linking something I don't know).
 + Care! Adding `#include <GDBStub.h>` is enough to enable the GDB, since PlatformIO will build the `gdbstub.c` too, which includes proper (non-nop) implementation for `gdb_init()` and `gdb_break()` and so on. The `gdb_init()` is called even before user' `setup()` (see `core_esp8266_main.cpp`).
 	+ Guarding the include with `#ifdef ENABLE_GDB` is possible, but requires also using `lib_ldf_mode = chain+` (or `deep+`) in `platformio.ini`, to instruct LDF to evaluate conditional syntax. Read about the [Library Dependency Finder](https://docs.platformio.org/en/stable/librarymanager/ldf.html). You can `#include <gdb_hooks.h>` if you want to use `gdb_do_break()` without extra macros.
 	+ You can check if your binary is built with the GDBStub using something like: `grep 'gdbstub_init' ./.pio/build/esp8266_debug/firmware.elf`.
@@ -26,13 +27,20 @@ I know the wall of text "Notes" below might be scary, but **please read** them t
 		+ If you manually type some GDB commands in Debug Console tab, for example: `c`/`continue` it will continue, but you have no way of interrupting that anymore, `interrupt` nor `signal SIGINT` doesn't work; can't send the `Ctrl+C`... 
 		+ On hang ups, you can try pressing stop few times and it disconnects, and you can reconnect by starting the debugging again; some instructions may have passed, but it doesn't forcefully restart the whole thing (unless you modified your files or )
 		+ Many commands are safe if you are on breakpoint, like `print`, `info`, `tbreak`, etc.
+		+ Using `step` (or similar) works, but makes your typing focus jump to the editor which is annoying (BTW: `Ctrl`+`Shift`+`Y` jumps back to the Debug Console tab).
 		+ No support for temporary breakpoints requires you to disable previous breakpoints.
 		+ You need disable all breakpoints before starting the debug if you use `debug_init_break` (actually inside `debug_init_cmds`).
+		+ Arduino `Serial.print`s in my code are mangled into separate lines, which makes it hard to read. In large amount of prints and fast rate it's a lot less readable.
 	+ Or use GDB manually - which is harder, requires knowledge and manual operation but feels more solid.
 		+ `Ctrl+C` works nicely as interrupt, of course if `GDBSTUB_CTRLC_BREAK=1` (default).
+		+ Arduino `Serial.print`s work as expected (single lines, to tearing).
 + Some stuff just doesn't work at all:
 	+ `call`ing functions from GDB, incl. in expressions.
-+ There is limit of single watchpoint and single breakpoint! Tip: use temporary breakpoints, example: `tbreak loop`. 
+	+ Multiple breakpoints. **There is limit of only single breakpoint**. Tip: use temporary breakpoints, example: `tbreak loop`. 
++ When `step`ping thought the code, larger functions can take quite longer to execute. _Well, the whole code works slower with less optimization and GDB attached, what did you expect? ;)_ No, but seriously, it steps over functions can lag a bit even if the function executes very fast in free run outside breakpoint.
++ If you use Wi-Fi or Bluetooth or any other buffered peripherals, stopping the execution (on breakpoint) for longer times can cause undefined behaviors, hang ups or crashes, due to buffer overflows or missed frames.
++ If you use precise-timed peripherals, like bit banging the data it can return invalid data and cause invalid behaviour. In one of my projects I used OneWire which is all about timing and while it seemingly worked okay without breakpoint set, using the `step` by step approach after hitting breakpoint returned invalid data.
++ In my more complex project, sometimes somehow I get random `SIGTRAP` stopping the execution in seemingly random places in the code. Normal break point is also `SIGTRAP`, from `break 0, 0` assembly instruction, meanwhile this one is... out of thin air? By the way, external interrupt is `SIGINT` (by CTRL+C in command line or pause button in VS Code). Some undocumented feature? Or random alignment of memory or something detected by the debugger? 
 + See also [Arduino core for ESP8266 docs about GDB usage](https://arduino-esp8266.readthedocs.io/en/latest/gdb.html).
 + [ESP8266 boot log shows on baud rate 74880](https://docs.espressif.com/projects/esptool/en/latest/esp8266/advanced-topics/boot-mode-selection.html#boot-log).
 

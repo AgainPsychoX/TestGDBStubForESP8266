@@ -32,7 +32,10 @@ void setup()
 	}
 	gdb_do_break();
 
-	Serial.println(F("Hello again!"));
+	// Two `print`s instead single `println` to illustrate problem 
+	// where VS Code debugger puts them into separate lines (harder to read).
+	Serial.print(F("Hello "));
+	Serial.print(F("again!\n"));
 }
 
 int ledOnDuration = 1000;
