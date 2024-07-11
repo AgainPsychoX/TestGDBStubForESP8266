@@ -34,6 +34,7 @@ I know the wall of text "Notes" below might be scary, but **please read** them t
 	+ Or use GDB manually - which is harder, requires knowledge and manual operation but feels more solid.
 		+ `Ctrl+C` works nicely as interrupt, of course if `GDBSTUB_CTRLC_BREAK=1` (default).
 		+ Arduino `Serial.print`s work as expected (single lines, to tearing).
+		+ If used [inside VS Code terminal window, there might be issues with arrow keys](https://github.com/microsoft/vscode/issues/221349) navigation in command buffer. In separate window it works okay.
 + Some stuff just doesn't work at all:
 	+ `call`ing functions from GDB, incl. in expressions.
 	+ Multiple breakpoints. **There is limit of only single breakpoint**. Tip: use temporary breakpoints, example: `tbreak loop`. 
