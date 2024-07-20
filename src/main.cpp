@@ -40,6 +40,7 @@ void setup()
 
 int ledOnDuration = 1000;
 int ledOffDuration = 1000;
+unsigned int yay = 17;
 
 void loop()
 {
@@ -51,8 +52,40 @@ void loop()
 	static int n = 0;
 	Serial.printf("Looping %d times\n", n++);
 
-	if (n % 17 == 0) {
+	if (n % yay == 0) {
 		Serial.println("Yay!");
 		gdb_do_break();
+	}
+
+	while (Serial.available()) {
+		char buffer[16];
+		char* p = buffer;
+		size_t len = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
+		buffer[len] = 0;
+		switch (buffer[0]) {
+			case 'y':
+				while (true) {
+					p++;
+					if (*p == 0) 
+						break; // out of current loop; only display yay value
+					if (*p == '=') {
+						yay = strtoul(p + 1, nullptr, 10);
+						break;
+					}
+				}
+				Serial.printf("Yay every %d times\n", yay);
+				break;
+			case 'b':
+				Serial.println("Let's break!");
+				gdb_do_break();
+				break;
+			default:
+				Serial.printf("Unknown command, length: %u, bytes: ", len);
+				for (size_t i = 0; i < len; i++) {
+					Serial.printf("%02X ", buffer[i]);
+				}
+				Serial.println();
+				break;
+		}
 	}
 }
